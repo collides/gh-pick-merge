@@ -6,9 +6,18 @@ on:
       - "*"
 
 jobs:
-  build:
-    name: Publish binaries
-    runs-on: ubuntu-latest
+  publish:
+    name: Publish for ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            artifact_name: gh-pick-merge
+            asset_name: gh-pick-merge-linux-amd64
+          - os: macos-latest
+            artifact_name: gh-pick-merge
+            asset_name: gh-pick-merge-macos-amd64
 
     steps:
       - uses: actions/checkout@v2
@@ -18,8 +27,6 @@ jobs:
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: target/release/gh-pick-merge
-          asset_name: gh-pick-merge
+          file: target/release/${{ matrix.artifact_name }}
+          asset_name: ${{ matrix.asset_name }}
           tag: ${{ github.ref }}
-          overwrite: true
-          body: "This is my release"
