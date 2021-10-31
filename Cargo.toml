@@ -1,5 +1,5 @@
 [package]
-name = "gh-pick-merge-action"
+name = "gh-pick-merge"
 version = "0.1.0"
 edition = "2018"
 
