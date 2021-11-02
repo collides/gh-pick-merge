@@ -22,7 +22,9 @@ async fn main() {
 
   let body = "auto pick merge".to_string();
 
-  github_open_pull_request(new_branch_name, "develop".to_string(), pr_title, body).await;
+  let pull_request_id =
+    github_open_pull_request(new_branch_name, "develop".to_string(), pr_title, body).await;
+  github_pull_request_push_comment(pull_request_id, "test".to_string()).await;
 }
 
 fn generate_new_branch_name(to_branch: String) -> String {
@@ -63,16 +65,10 @@ async fn create_new_branch_by_commits(to_branch: String, pr_number: i64) -> Opti
 }
 
 async fn pick_commits(pr_number: i64) -> Vec<String> {
-  let mut is_error = false;
   let mut not_matched_hash = Vec::new();
   let commits = github_get_commits_in_pr(pr_number).await;
 
   for commit_hash in commits {
-    if is_error == true {
-      not_matched_hash.push(commit_hash);
-      continue;
-    }
-
     let output = git(["cherry-pick", commit_hash.as_str()].to_vec());
 
     match output {
@@ -80,7 +76,7 @@ async fn pick_commits(pr_number: i64) -> Vec<String> {
         println!("Pick success Commit hash: {:?}", commit_hash);
       }
       None => {
-        is_error = true;
+        not_matched_hash.push(commit_hash);
       }
     }
   }

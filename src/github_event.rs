@@ -25,3 +25,8 @@ pub struct GithubEventAction {
 pub struct GithubGetCommitResponseItem {
   pub sha: String,
 }
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct GithubCreatePullRequestResponse {
+  pub id: i64,
+}

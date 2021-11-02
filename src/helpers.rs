@@ -86,32 +86,36 @@ pub fn get_github_api_headers() -> HeaderMap {
   headers
 }
 
-// TODO: comment
-// pub async fn github_pull_request_push_comment(pr_number: i64, comment: String) {
-//   let client = fetch_github_api_client();
-//   let repo_url = github_event_repo_url();
+pub async fn github_pull_request_push_comment(pr_number: i64, comment: String) {
+  let client = fetch_github_api_client();
+  let repo_url = github_event_repo_url();
 
-//   let body = format!(r#"{{"body":"{}"}}"#, comment);
+  let body = format!(r#"{{"body":"{}"}}"#, comment);
 
-//   let url = format!("{}/issues/${}/comments", repo_url, pr_number);
+  let url = format!("{}/issues/${}/comments", repo_url, pr_number);
 
-//   let response = client
-//     .post(url)
-//     .body(body)
-//     .send()
-//     .await
-//     .expect("Failed to create pull request comment");
+  let response = client
+    .post(url)
+    .body(body)
+    .send()
+    .await
+    .expect("Failed to create pull request comment");
 
-//     println!(
-//       "create comment: {}",
-//       response
-//         .text()
-//         .await
-//         .expect("Failed to create pull comment")
-//     );
-// }
+  println!(
+    "create comment: {}",
+    response
+      .text()
+      .await
+      .expect("Failed to create pull comment")
+  );
+}
 
-pub async fn github_open_pull_request(head: String, base: String, title: String, body: String) {
+pub async fn github_open_pull_request(
+  head: String,
+  base: String,
+  title: String,
+  body: String,
+) -> i64 {
   let client = fetch_github_api_client();
 
   let repo_url = github_event_repo_url();
@@ -128,15 +132,14 @@ pub async fn github_open_pull_request(head: String, base: String, title: String,
     .body(body)
     .send()
     .await
+    .expect("Failed to create pull request")
+    .json::<GithubCreatePullRequestResponse>()
+    .await
     .expect("Failed to create pull request");
 
-  println!(
-    "{}",
-    response
-      .text()
-      .await
-      .expect("Failed to create pull request")
-  );
+  println!("{:?}", response);
+
+  response.id
 }
 
 pub async fn github_get_commits_in_pr(pr_number: i64) -> Vec<String> {
