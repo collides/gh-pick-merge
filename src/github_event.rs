@@ -28,5 +28,5 @@ pub struct GithubGetCommitResponseItem {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct GithubCreatePullRequestResponse {
-  pub id: i64,
+  pub number: i64,
 }

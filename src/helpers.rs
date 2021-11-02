@@ -139,7 +139,7 @@ pub async fn github_open_pull_request(
 
   println!("{:?}", response);
 
-  response.id
+  response.number
 }
 
 pub async fn github_get_commits_in_pr(pr_number: i64) -> Vec<String> {
