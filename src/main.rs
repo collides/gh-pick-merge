@@ -23,12 +23,15 @@ async fn main() {
 
   let matched_labels = match_pick_merge_label(github_event.pull_request.labels);
 
+  println!("{:?}", matched_labels);
+
   if matched_labels.len() <= 0 {
     return;
   }
 
   for label in matched_labels {
     thread::spawn(move || {
+      println!("create spawn");
       let dest_branch = label.split("/").last().expect("Not match dest branch");
 
       pick_pr_to_dest_branch(dest_branch.to_string());
@@ -38,6 +41,8 @@ async fn main() {
 
 #[tokio::main]
 async fn pick_pr_to_dest_branch(dest_branch: String) {
+  println!("start job");
+
   let github_event = get_event_action();
 
   git_setup();
