@@ -29,11 +29,9 @@ async fn main() {
   git_setup();
 
   for label in matched_labels {
-    tokio::spawn(async move {
-      let dest_branch = label.split("/").last().expect("Not match dest branch");
+    let dest_branch = label.split("/").last().expect("Not match dest branch");
 
-      pick_pr_to_dest_branch(dest_branch.to_string()).await;
-    });
+    pick_pr_to_dest_branch(dest_branch.to_string()).await;
   }
 }
 
