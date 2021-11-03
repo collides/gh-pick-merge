@@ -92,7 +92,7 @@ pub async fn github_pull_request_push_comment(pr_number: i64, comment: String) {
 
   let body = format!(r#"{{"body":"{}"}}"#, comment);
 
-  let url = format!("{}/pulls/${}/comments", repo_url, pr_number);
+  let url = format!("{}/issues/${}/comments", repo_url, pr_number);
 
   let response = client
     .post(url)

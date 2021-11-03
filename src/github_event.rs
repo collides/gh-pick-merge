@@ -7,9 +7,16 @@ pub struct GithubActionPullRequestBranch {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
+pub struct GithubActionPullRequestLabel {
+  id: i64,
+  pub name: String,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
 pub struct GithubActionPullRequest {
   pub number: i64,
   pub base: GithubActionPullRequestBranch,
+  pub labels: Vec<GithubActionPullRequestLabel>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]

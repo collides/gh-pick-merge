@@ -1,29 +1,59 @@
 mod github_event;
 mod helpers;
 
+use std::thread;
+
+use crate::github_event::GithubActionPullRequestLabel;
 use chrono::prelude::*;
 use helpers::github_get_commits_in_pr;
 
 use helpers::*;
 
+fn match_pick_merge_label(labels: Vec<GithubActionPullRequestLabel>) -> Vec<String> {
+  labels
+    .iter()
+    .filter(|label| label.name.starts_with("auto-pick/"))
+    .map(|label| label.name.clone())
+    .collect()
+}
+
 #[tokio::main]
 async fn main() {
-  git_setup();
-
   let github_event = get_event_action();
+
+  let matched_labels = match_pick_merge_label(github_event.pull_request.labels);
+
+  if matched_labels.len() <= 0 {
+    return;
+  }
+
+  for label in matched_labels {
+    thread::spawn(move || {
+      let dest_branch = label.split("/").last().expect("Not match dest branch");
+
+      pick_pr_to_dest_branch(dest_branch.to_string());
+    });
+  }
+}
+
+#[tokio::main]
+async fn pick_pr_to_dest_branch(dest_branch: String) {
+  let github_event = get_event_action();
+
+  git_setup();
 
   let pr_number = github_event.number;
 
-  let new_branch_name = create_new_branch_by_commits("develop".to_string(), pr_number)
+  let new_branch_name = create_new_branch_by_commits(dest_branch.clone(), pr_number)
     .await
     .expect("Create new branch by commit is failed");
 
-  let pr_title = format!("chore: auto pick {}", pr_number);
-
+  let pr_title = format!("chore: auto pick {} to {}", pr_number, dest_branch);
   let body = format!("Auto pick merge by #{}", pr_number);
 
   let pull_request_id =
-    github_open_pull_request(new_branch_name, "develop".to_string(), pr_title, body).await;
+    github_open_pull_request(new_branch_name, dest_branch, pr_title, body).await;
+
   github_pull_request_push_comment(pull_request_id, "test".to_string()).await;
 }
 
@@ -79,3 +109,6 @@ async fn pick_commits(pr_number: i64) -> Vec<String> {
 
   not_matched_hash
 }
+
+#[test]
+fn test() {}
