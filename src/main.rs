@@ -1,8 +1,6 @@
 mod github_event;
 mod helpers;
 
-use std::thread;
-
 use crate::github_event::GithubActionPullRequestLabel;
 use chrono::prelude::*;
 use helpers::github_get_commits_in_pr;
@@ -31,18 +29,14 @@ async fn main() {
   git_setup();
 
   for label in matched_labels {
-    thread::spawn(move || {
-      println!("create spawn");
+    tokio::spawn(async move {
       let dest_branch = label.split("/").last().expect("Not match dest branch");
 
-      pick_pr_to_dest_branch(dest_branch.to_string());
-    })
-    .join()
-    .expect("Thread panicked");
+      pick_pr_to_dest_branch(dest_branch.to_string()).await;
+    });
   }
 }
 
-#[tokio::main]
 async fn pick_pr_to_dest_branch(dest_branch: String) {
   println!("start job");
 
@@ -123,6 +117,3 @@ async fn pick_commits(pr_number: i64) -> Vec<String> {
 
   not_matched_hash
 }
-
-#[test]
-fn test() {}
