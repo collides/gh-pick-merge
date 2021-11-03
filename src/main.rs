@@ -28,6 +28,7 @@ async fn main() {
   if matched_labels.len() <= 0 {
     return;
   }
+  git_setup();
 
   for label in matched_labels {
     thread::spawn(move || {
@@ -45,16 +46,22 @@ async fn pick_pr_to_dest_branch(dest_branch: String) {
 
   let github_event = get_event_action();
 
-  git_setup();
+  println!("{:?}", github_event);
 
   let pr_number = github_event.number;
+
+  println!("{:?}", pr_number);
 
   let new_branch_name = create_new_branch_by_commits(dest_branch.clone(), pr_number)
     .await
     .expect("Create new branch by commit is failed");
 
+  println!("{:?}", new_branch_name);
+
   let pr_title = format!("chore: auto pick {} to {}", pr_number, dest_branch);
   let body = format!("Auto pick merge by #{}", pr_number);
+
+  println!("{:?},{:?}", pr_title, body);
 
   let pull_request_id =
     github_open_pull_request(new_branch_name, dest_branch, pr_title, body).await;
