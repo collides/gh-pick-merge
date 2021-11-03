@@ -36,7 +36,9 @@ async fn main() {
       let dest_branch = label.split("/").last().expect("Not match dest branch");
 
       pick_pr_to_dest_branch(dest_branch.to_string());
-    });
+    })
+    .join()
+    .expect("Thread panicked");
   }
 }
 
