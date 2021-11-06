@@ -79,7 +79,7 @@ pub fn get_github_api_headers() -> HeaderMap {
   headers
 }
 
-pub async fn github_pull_request_push_comment(pr_number: i64, comment: String) {
+pub async fn github_pull_request_push_comment(pr_number: String, comment: String) {
   let client = fetch_github_api_client();
   let repo_url = github_api_event_repo_url();
 
@@ -108,7 +108,7 @@ pub async fn github_open_pull_request(
   base: String,
   title: String,
   body: String,
-) -> i64 {
+) -> String {
   let client = fetch_github_api_client();
 
   let repo_url = github_api_event_repo_url();
@@ -133,7 +133,7 @@ pub async fn github_open_pull_request(
   response.number
 }
 
-pub async fn github_get_commits_in_pr(pr_number: i64) -> Vec<String> {
+pub async fn github_get_commits_in_pr(pr_number: String) -> Vec<String> {
   let repo_url = github_api_event_repo_url();
   let client = fetch_github_api_client();
   let mut commits = Vec::new();
