@@ -38,7 +38,7 @@ async fn main() {
 
 async fn pick_pr_to_dest_branch(pr_number: String, dest_branch: String) {
   println!("Start job pick to: {}", dest_branch);
-
+ 
   let create_branch_result =
     create_new_branch_by_commits(dest_branch.clone(), pr_number.clone()).await;
 

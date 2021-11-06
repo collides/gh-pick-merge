@@ -38,7 +38,7 @@ pub fn git_setup() {
 }
 
 pub fn generate_pull_request_comment(hash: Vec<String>) -> String {
-  format!("Not pick commit: {:?}", hash)
+  format!("Not pick commit: {}", hash.join(","))
 }
 
 pub fn generate_new_branch_name(to_branch: String) -> String {
