@@ -8,20 +8,6 @@ use crate::github_event::*;
 
 use std::process::{Command, Output};
 
-pub fn is_travis() -> bool {
-  parse_env("TRAVIS") == "true"
-}
-
-fn get_user_info() -> GithubUserInfo {
-  if is_travis() == true {
-    return GithubUserInfo::new(
-      "dp-github-bot".to_string(),
-      "github_bot@datapipeline.com".to_string(),
-    );
-  }
-  return GithubUserInfo::new("github action".to_string(), "action@github.com".to_string());
-}
-
 pub fn git_setup() {
   let env = get_github_env();
   let user_info = get_user_info();
@@ -35,6 +21,16 @@ pub fn git_setup() {
 
   git(["config", "user.email", user_info.email.as_str()].to_vec());
   git(["config", "user.name", user_info.user_name.as_str()].to_vec());
+}
+
+fn get_user_info() -> GithubUserInfo {
+  if is_travis() == true {
+    return GithubUserInfo::new(
+      "dp-github-bot".to_string(),
+      "github_bot@datapipeline.com".to_string(),
+    );
+  }
+  return GithubUserInfo::new("github action".to_string(), "action@github.com".to_string());
 }
 
 pub fn generate_pull_request_comment(hash: Vec<String>) -> String {
@@ -95,7 +91,7 @@ pub fn get_github_api_headers() -> HeaderMap {
   headers
 }
 
-pub async fn github_pull_request_push_comment(pr_number: String, comment: String) {
+pub async fn github_pull_request_push_comment(pr_number: i64, comment: String) {
   let client = fetch_github_api_client();
   let repo_url = github_api_event_repo_url();
 
@@ -124,7 +120,7 @@ pub async fn github_open_pull_request(
   base: String,
   title: String,
   body: String,
-) -> String {
+) -> i64 {
   let client = fetch_github_api_client();
 
   let repo_url = github_api_event_repo_url();
@@ -149,7 +145,7 @@ pub async fn github_open_pull_request(
   response.number
 }
 
-pub async fn github_get_commits_in_pr(pr_number: String) -> Vec<String> {
+pub async fn github_get_commits_in_pr(pr_number: i64) -> Vec<String> {
   let repo_url = github_api_event_repo_url();
   let client = fetch_github_api_client();
   let mut commits = Vec::new();

@@ -10,7 +10,7 @@ use types::*;
 fn match_pick_merge_labels(labels: Vec<GithubActionPullRequestLabel>) -> Vec<String> {
   labels
     .iter()
-    .filter(|label| label.name.starts_with("auto-pick/"))
+    .filter(|label| label.name.starts_with("pick-to/"))
     .map(|label| label.name.clone())
     .collect()
 }
@@ -32,15 +32,15 @@ async fn main() {
 
     let dest_branch = label.split("/").last().expect("Not match dest branch");
 
-    pick_pr_to_dest_branch(github_event.number.clone(), dest_branch.to_string()).await;
+    pick_pr_to_dest_branch(github_event.number, dest_branch.to_string()).await;
   }
 }
 
-async fn pick_pr_to_dest_branch(pr_number: String, dest_branch: String) {
+async fn pick_pr_to_dest_branch(pr_number: i64, dest_branch: String) {
   println!("Start job pick to: {}", dest_branch);
  
   let create_branch_result =
-    create_new_branch_by_commits(dest_branch.clone(), pr_number.clone()).await;
+    create_new_branch_by_commits(dest_branch.clone(), pr_number).await;
 
   let pr_title = format!("chore: auto pick #{} to {}", pr_number, dest_branch);
   let body = format!("Auto pick merge by #{}", pr_number);
@@ -66,7 +66,7 @@ async fn pick_pr_to_dest_branch(pr_number: String, dest_branch: String) {
 
 async fn create_new_branch_by_commits(
   to_branch: String,
-  pr_number: String,
+  pr_number: i64,
 ) -> CreateNewBranchResult {
   let origin_to_branch_name = format!("origin/{}", to_branch);
 
@@ -90,9 +90,9 @@ async fn create_new_branch_by_commits(
   CreateNewBranchResult::new(new_branch_name, not_matched_hash)
 }
 
-async fn pick_commits(pr_number: String) -> Vec<String> {
+async fn pick_commits(pr_number: i64) -> Vec<String> {
   let mut not_matched_hash = Vec::new();
-  let commits = github_get_commits_in_pr(pr_number.clone()).await;
+  let commits = github_get_commits_in_pr(pr_number).await;
 
   for commit_hash in commits {
     let output = git(["cherry-pick", commit_hash.as_str()].to_vec());

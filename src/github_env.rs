@@ -1,4 +1,3 @@
-use crate::is_travis;
 use crate::get_event_action_by_gh_action;
 use std::env;
 
@@ -10,7 +9,7 @@ pub struct GithubActionEnv {
   pub github_repository: String,
   pub github_token: String,
   pub github_actor: String,
-  pub pull_request_number: String,
+  pub pull_request_number: i64,
 }
 
 impl GithubActionEnv {
@@ -19,7 +18,7 @@ impl GithubActionEnv {
     github_repository: String,
     github_token: String,
     github_actor: String,
-    pull_request_number: String,
+    pull_request_number: i64,
   ) -> Self {
     GithubActionEnv {
       github_api_url,
@@ -29,6 +28,10 @@ impl GithubActionEnv {
       pull_request_number,
     }
   }
+}
+
+pub fn is_travis() -> bool {
+  env::var_os("TRAVIS").is_some()
 }
 
 pub fn parse_env(key: &str) -> String {
@@ -47,7 +50,7 @@ pub fn get_github_env_by_travis() -> GithubActionEnv {
   let repo = parse_env("TRAVIS_PULL_REQUEST_SLUG");
   let github_token = parse_env("GITHUB_TOKEN");
   let actor = "dp-github-bot".to_string();
-  let pr_number = parse_env("TRAVIS_PULL_REQUEST");
+  let pr_number = parse_env("TRAVIS_PULL_REQUEST").parse::<i64>().expect("Travis pr number is valid");
 
   GithubActionEnv::new(api_url, repo, github_token, actor, pr_number)
 }

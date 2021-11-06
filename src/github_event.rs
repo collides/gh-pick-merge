@@ -1,4 +1,4 @@
-use crate::is_travis;
+use crate::github_env::is_travis;
 use crate::fetch_github_api_client;
 use crate::github_api_event_repo_url;
 use crate::github_env::get_github_env;
@@ -29,7 +29,7 @@ pub struct GithubActionPullRequest {
 #[derive(Serialize, Deserialize, Debug)]
 pub struct GithubEventAction {
   action: String,
-  pub number: String,
+  pub number: i64,
   pub pull_request: GithubActionPullRequest,
 }
 
@@ -42,7 +42,7 @@ pub struct GithubGetCommitResponseItem {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct GithubCreatePullRequestResponse {
-  pub number: String,
+  pub number: i64,
 }
 
 // ------ Impl ------
