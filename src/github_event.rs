@@ -1,7 +1,7 @@
+use crate::is_travis;
 use crate::fetch_github_api_client;
 use crate::github_api_event_repo_url;
 use crate::github_env::get_github_env;
-use crate::github_env::parse_env;
 use std::{env, fs};
 
 use serde::{Deserialize, Serialize};
@@ -48,7 +48,7 @@ pub struct GithubCreatePullRequestResponse {
 // ------ Impl ------
 
 pub async fn get_event_action() -> GithubEventAction {
-  if parse_env("TRAVIS") == "true" {
+  if is_travis() == true {
     return get_event_action_by_api().await;
   }
 

@@ -1,3 +1,4 @@
+use crate::GithubUserInfo;
 use chrono::Utc;
 use reqwest::header::HeaderMap;
 use reqwest::Client;
@@ -7,8 +8,23 @@ use crate::github_event::*;
 
 use std::process::{Command, Output};
 
+pub fn is_travis() -> bool {
+  parse_env("TRAVIS") == "true"
+}
+
+fn get_user_info() -> GithubUserInfo {
+  if is_travis() == true {
+    return GithubUserInfo::new(
+      "dp-github-bot".to_string(),
+      "github_bot@datapipeline.com".to_string(),
+    );
+  }
+  return GithubUserInfo::new("github action".to_string(), "action@github.com".to_string());
+}
+
 pub fn git_setup() {
   let env = get_github_env();
+  let user_info = get_user_info();
 
   let url = format!(
     "https://{}:{}@github.com/{}.git",
@@ -17,8 +33,8 @@ pub fn git_setup() {
 
   git(["remote", "set-url", "--push", "origin", url.as_str()].to_vec());
 
-  git(["config", "user.email", "action@github.com"].to_vec());
-  git(["config", "user.name", "github action"].to_vec());
+  git(["config", "user.email", user_info.email.as_str()].to_vec());
+  git(["config", "user.name", user_info.user_name.as_str()].to_vec());
 }
 
 pub fn generate_pull_request_comment(hash: Vec<String>) -> String {
