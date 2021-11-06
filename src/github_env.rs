@@ -1,23 +1,32 @@
+use crate::is_travis;
+use crate::get_event_action_by_gh_action;
 use std::env;
 
-use serde::{Serialize,Deserialize};
-
+use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct GithubActionEnv {
   pub github_api_url: String,
   pub github_repository: String,
   pub github_token: String,
-  pub github_actor: String
+  pub github_actor: String,
+  pub pull_request_number: String,
 }
 
 impl GithubActionEnv {
-  pub const fn new(github_api_url: String, github_repository: String, github_token: String, github_actor: String) -> Self {
+  pub const fn new(
+    github_api_url: String,
+    github_repository: String,
+    github_token: String,
+    github_actor: String,
+    pull_request_number: String,
+  ) -> Self {
     GithubActionEnv {
       github_api_url,
       github_repository,
       github_token,
       github_actor,
+      pull_request_number,
     }
   }
 }
@@ -33,16 +42,31 @@ pub fn parse_env(key: &str) -> String {
 //   parse_env("GITHUB_ACTION") != ""
 // }
 
+pub fn get_github_env_by_travis() -> GithubActionEnv {
+  let api_url = "https://api.github.com".to_string();
+  let repo = parse_env("TRAVIS_PULL_REQUEST_SLUG");
+  let github_token = parse_env("GITHUB_TOKEN");
+  let actor = "dp-github-bot".to_string();
+  let pr_number = parse_env("TRAVIS_PULL_REQUEST");
+
+  GithubActionEnv::new(api_url, repo, github_token, actor, pr_number)
+}
+
 pub fn get_github_env_by_gh_action() -> GithubActionEnv {
   let api_url = parse_env("GITHUB_API_URL");
   let repo = parse_env("GITHUB_REPOSITORY");
   let github_token = parse_env("GITHUB_TOKEN");
   let actor = parse_env("GITHUB_ACTOR");
 
+  let event_info = get_event_action_by_gh_action();
 
-  GithubActionEnv::new(api_url, repo, github_token, actor)
+  GithubActionEnv::new(api_url, repo, github_token, actor, event_info.number)
 }
 
 pub fn get_github_env() -> GithubActionEnv {
+  if is_travis() == true  {
+    return get_github_env_by_travis();
+  }
+
   get_github_env_by_gh_action()
 }

@@ -1,7 +1,7 @@
+mod github_env;
 mod github_event;
 mod helpers;
 mod types;
-mod github_env;
 
 use crate::github_event::*;
 use crate::helpers::*;
@@ -17,7 +17,7 @@ fn match_pick_merge_labels(labels: Vec<GithubActionPullRequestLabel>) -> Vec<Str
 
 #[tokio::main]
 async fn main() {
-  let github_event = get_event_action();
+  let github_event = get_event_action().await;
 
   let matched_labels = match_pick_merge_labels(github_event.pull_request.labels);
 
@@ -32,18 +32,15 @@ async fn main() {
 
     let dest_branch = label.split("/").last().expect("Not match dest branch");
 
-    pick_pr_to_dest_branch(dest_branch.to_string()).await;
+    pick_pr_to_dest_branch(github_event.number.clone(), dest_branch.to_string()).await;
   }
 }
 
-async fn pick_pr_to_dest_branch(dest_branch: String) {
+async fn pick_pr_to_dest_branch(pr_number: String, dest_branch: String) {
   println!("Start job pick to: {}", dest_branch);
 
-  let github_event = get_event_action();
-
-  let pr_number = github_event.number;
-
-  let create_branch_result = create_new_branch_by_commits(dest_branch.clone(), pr_number).await;
+  let create_branch_result =
+    create_new_branch_by_commits(dest_branch.clone(), pr_number.clone()).await;
 
   let pr_title = format!("chore: auto pick #{} to {}", pr_number, dest_branch);
   let body = format!("Auto pick merge by #{}", pr_number);
@@ -67,7 +64,10 @@ async fn pick_pr_to_dest_branch(dest_branch: String) {
   println!("End job");
 }
 
-async fn create_new_branch_by_commits(to_branch: String, pr_number: i64) -> CreateNewBranchResult {
+async fn create_new_branch_by_commits(
+  to_branch: String,
+  pr_number: String,
+) -> CreateNewBranchResult {
   let origin_to_branch_name = format!("origin/{}", to_branch);
 
   let new_branch_name = generate_new_branch_name(to_branch);
@@ -90,9 +90,9 @@ async fn create_new_branch_by_commits(to_branch: String, pr_number: i64) -> Crea
   CreateNewBranchResult::new(new_branch_name, not_matched_hash)
 }
 
-async fn pick_commits(pr_number: i64) -> Vec<String> {
+async fn pick_commits(pr_number: String) -> Vec<String> {
   let mut not_matched_hash = Vec::new();
-  let commits = github_get_commits_in_pr(pr_number).await;
+  let commits = github_get_commits_in_pr(pr_number.clone()).await;
 
   for commit_hash in commits {
     let output = git(["cherry-pick", commit_hash.as_str()].to_vec());

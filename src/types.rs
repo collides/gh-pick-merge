@@ -11,3 +11,18 @@ impl CreateNewBranchResult {
     }
   }
 }
+
+pub struct GithubUserInfo {
+  pub user_name: String,
+  pub email: String,
+}
+
+impl GithubUserInfo {
+  pub const fn new(name: String, email: String) -> Self {
+    GithubUserInfo {
+      user_name: name,
+      email,
+    }
+  }
+}
+
