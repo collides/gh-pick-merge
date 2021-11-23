@@ -102,6 +102,7 @@ async fn pick_commits(pr_number: i64) -> Vec<String> {
         );
       }
       None => {
+        git(["cherry-pick", "--abort"].to_vec());
         not_matched_hash.push(commit_hash);
       }
     }
