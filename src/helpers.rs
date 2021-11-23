@@ -34,7 +34,7 @@ fn get_user_info() -> GithubUserInfo {
 }
 
 pub fn generate_pull_request_comment(hash: Vec<String>) -> String {
-  format!("Not pick commit: {}", hash.join(","))
+  format!("If there are empty commits, you need to overwrite the empty commits and manually pick the following commits: {}", hash.join(","))
 }
 
 pub fn generate_new_branch_name(to_branch: String) -> String {
