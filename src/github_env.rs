@@ -58,7 +58,7 @@ pub fn get_github_env_by_travis() -> GithubActionEnv {
 pub fn get_github_env_by_gh_action() -> GithubActionEnv {
   let api_url = parse_env("GITHUB_API_URL");
   let repo = parse_env("GITHUB_REPOSITORY");
-  let github_token = parse_env("GITHUB_TOKEN");
+  let github_token = parse_env("GITHUB_ACTION_TOKEN");
   let actor = parse_env("GITHUB_ACTOR");
 
   let event_info = get_event_action_by_gh_action();
