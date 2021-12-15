@@ -33,6 +33,37 @@ fn get_user_info() -> GithubUserInfo {
   return GithubUserInfo::new("github action".to_string(), "action@github.com".to_string());
 }
 
+pub fn generate_pull_request_detail(detail: String) -> String {
+  format!(
+    r#"
+### 说明
+
+{}
+
+#### Confluence DIP/Jira Issue 链接
+
+- http://doc.datapipeline.com/pages/viewpage.action?pageId=14549983
+- http://jira.datapipeline.com/browse/DP-1000
+
+### Check List
+
+在 Request Review 前，我已完成以下条目：
+
+- [ ] PR 标题遵循 `<jira-issue-id> <type>(<scope>): <subject>` 的格式
+- [ ] 已经先自己 Review 一遍，无明显错误
+- [ ] 已添加相关的单元测试/集成测试代码
+- [ ] 已完成自测
+- [ ] 已添加对应版本的 Milestone
+- 此 PR 为 Hotfix <!-- 如果不是，则删除此项 -->
+  - [ ] 已添加 `need-merge-to-master` `hotfix` 标签
+- 此 PR 为 Hotfix Merge <!-- 如果不是，则删除此项 -->
+  - [ ] 已添加 `hotfix-merge` 标签
+  - [ ] 原 Hotfix 的 PR 链接为：#100（提交到稳定分支：<稳定分支名称>）
+  - [ ] 已删除原 Hotfix PR 中的 `need-merge-to-master` 标签"#,
+    detail
+  )
+}
+
 pub fn generate_pull_request_comment(hash: Vec<String>) -> String {
   format!("If there are empty commits, you need to overwrite the empty commits and manually pick the following commits: {}", hash.join(","))
 }

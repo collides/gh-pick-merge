@@ -40,8 +40,9 @@ async fn pick_pr_to_dest_branch(pr_number: i64, dest_branch: String) {
   println!("Start job pick to: {}", dest_branch);
 
   let create_branch_result = create_new_branch_by_commits(dest_branch.clone(), pr_number).await;
-  let pr_title = format!("chore: auto pick #{} to {}", pr_number, dest_branch);
-  let body = format!("Auto pick merge by #{}", pr_number);
+  let pr_title = format!("fix: auto pick #{} to {}", pr_number, dest_branch);
+
+  let body = generate_pull_request_detail(format!("Auto pick merge by #{}", pr_number));
 
   let pull_request_id = github_open_pull_request(
     create_branch_result.new_branch_name,
