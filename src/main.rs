@@ -105,12 +105,14 @@ async fn pick_commits(pr_number: i64) -> Vec<String> {
       None => {
         git(["cherry-pick", "--abort"].to_vec());
         not_matched_hash.push(commit_hash);
+        println!("Pick error abort",);
       }
     }
   }
 
   if matched_hash.len() == 0 {
-    git(["commit", "--allow-empty", "-m", "empty: no matched commit"].to_vec());
+    let output = git(["commit", "--allow-empty", "-m", "empty: no matched commit"].to_vec());
+    println!("Commit allow empty output: {:?}", output);
   }
 
   not_matched_hash
