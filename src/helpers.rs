@@ -173,6 +173,8 @@ pub async fn github_open_pull_request(
     .await
     .expect("Failed to create pull request");
 
+  println!("Github open pull request response:{:?}", response);
+
   response.number
 }
 
