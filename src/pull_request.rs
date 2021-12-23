@@ -82,9 +82,11 @@ fn get_pull_request_body() -> String {
   let pull_request_template_content = fs::read_to_string(DEFAULT_GITHUB_PULL_REQUEST_TEMPLATE_PATH);
 
   match pull_request_template_content {
-    Ok(content) => content,
+    Ok(content) => {
+      serde_json::to_string(&content).expect("get pull request body convert json to string error")
+    }
     Err(error) => {
-      println!("Read pull request template content Error: {}", error);
+      println!("Read pull request template content error: {}", error);
       String::from("")
     }
   }
