@@ -1,7 +1,7 @@
-use crate::github_env::is_travis;
-use crate::fetch_github_api_client;
-use crate::github_api_event_repo_url;
 use crate::github_env::get_github_env;
+use crate::github_env::is_travis;
+use crate::helpers::get_github_api;
+use crate::helpers::github_api_event_repo_url;
 use std::{env, fs};
 
 use serde::{Deserialize, Serialize};
@@ -67,14 +67,10 @@ pub fn get_event_action_by_gh_action() -> GithubEventAction {
 pub async fn get_event_action_by_api() -> GithubEventAction {
   let env = get_github_env();
   let repo_url = github_api_event_repo_url();
-  let client = fetch_github_api_client();
   let url = format!("{}/pulls/{}", repo_url, env.pull_request_number);
 
-  client
-    .get(url)
-    .send()
+  get_github_api(url)
     .await
-    .expect("Failed to get pull request event")
     .json::<GithubEventAction>()
     .await
     .expect("Failed into json by pull request event")

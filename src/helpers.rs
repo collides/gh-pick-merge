@@ -1,12 +1,44 @@
+use crate::GithubActionPullRequestLabel;
 use crate::GithubUserInfo;
 use chrono::Utc;
 use reqwest::header::HeaderMap;
+use reqwest::Body;
 use reqwest::Client;
+use reqwest::Response;
 
 use crate::github_env::*;
-use crate::github_event::*;
 
 use std::process::{Command, Output};
+
+pub fn match_pick_merge_labels(labels: Vec<GithubActionPullRequestLabel>) -> Vec<String> {
+  labels
+    .iter()
+    .filter(|label| label.name.starts_with("pick-to/"))
+    .map(|label| label.name.clone())
+    .collect()
+}
+
+pub fn generate_pull_request_comment(hash: Vec<String>) -> String {
+  format!("If there are empty commits, you need to overwrite the empty commits and manually pick the following commits: {}", hash.join(","))
+}
+
+pub fn generate_new_branch_name(to_branch: String) -> String {
+  let timestamp: i64 = Utc::now().timestamp();
+
+  format!("bot/auto-pick-{}-{:?}", to_branch, timestamp)
+}
+
+fn get_user_info() -> GithubUserInfo {
+  if is_travis() == true {
+    return GithubUserInfo::new(
+      "dp-github-bot".to_string(),
+      "github_bot@datapipeline.com".to_string(),
+    );
+  }
+  return GithubUserInfo::new("github action".to_string(), "action@github.com".to_string());
+}
+
+// ------ github helpers ------
 
 pub fn git_setup() {
   let env = get_github_env();
@@ -21,26 +53,6 @@ pub fn git_setup() {
 
   git(["config", "user.email", user_info.email.as_str()].to_vec());
   git(["config", "user.name", user_info.user_name.as_str()].to_vec());
-}
-
-fn get_user_info() -> GithubUserInfo {
-  if is_travis() == true {
-    return GithubUserInfo::new(
-      "dp-github-bot".to_string(),
-      "github_bot@datapipeline.com".to_string(),
-    );
-  }
-  return GithubUserInfo::new("github action".to_string(), "action@github.com".to_string());
-}
-
-pub fn generate_pull_request_comment(hash: Vec<String>) -> String {
-  format!("If there are empty commits, you need to overwrite the empty commits and manually pick the following commits: {}", hash.join(","))
-}
-
-pub fn generate_new_branch_name(to_branch: String) -> String {
-  let timestamp: i64 = Utc::now().timestamp();
-
-  format!("bot/auto-pick-{}-{:?}", to_branch, timestamp)
 }
 
 pub fn git(args: Vec<&str>) -> Option<Output> {
@@ -77,6 +89,43 @@ pub fn fetch_github_api_client() -> Client {
     .expect("Initial github api client is failed")
 }
 
+pub async fn get_github_api(url: String) -> Response {
+  let client = fetch_github_api_client();
+
+  let response = client
+    .get(url.clone())
+    .send()
+    .await
+    .expect("Failed get github api");
+
+  if response.status().is_success() == true {
+    println!("Success to get {} github api", url);
+  } else {
+    panic!("Failed to get github api response {:?}", response);
+  }
+
+  response
+}
+
+pub async fn post_github_api<T: Into<Body>>(url: String, body: T) -> Response {
+  let client = fetch_github_api_client();
+
+  let response = client
+    .post(url.clone())
+    .body(body)
+    .send()
+    .await
+    .expect("Failed post github api");
+
+  if response.status().is_success() == true {
+    println!("Success to post {} github api", url);
+  } else {
+    panic!("Failed to post github api response {:?}", response);
+  }
+
+  response
+}
+
 pub fn get_github_api_headers() -> HeaderMap {
   let env = get_github_env();
 
@@ -89,83 +138,4 @@ pub fn get_github_api_headers() -> HeaderMap {
   headers.append("content-type", "application/json".parse().unwrap());
   headers.append("accept", "application/vnd.github.v3+json".parse().unwrap());
   headers
-}
-
-pub async fn github_pull_request_push_comment(pr_number: i64, comment: String) {
-  let client = fetch_github_api_client();
-  let repo_url = github_api_event_repo_url();
-
-  let body = format!(r#"{{"body":"{}"}}"#, comment);
-
-  let url = format!("{}/issues/{}/comments", repo_url, pr_number);
-
-  let response = client
-    .post(url)
-    .body(body)
-    .send()
-    .await
-    .expect("Failed to create pull request comment");
-
-  println!(
-    "Create comment: {}",
-    response
-      .text()
-      .await
-      .expect("Failed to create pull comment")
-  );
-}
-
-pub async fn github_open_pull_request(
-  head: String,
-  base: String,
-  title: String,
-  body: String,
-) -> i64 {
-  let client = fetch_github_api_client();
-
-  let repo_url = github_api_event_repo_url();
-
-  let body = format!(
-    r#"{{"head":"{}","base":"{}","title":"{}","body":"{}"}}"#,
-    head, base, title, body
-  );
-
-  let url = format!("{}/pulls", repo_url);
-
-  let response = client
-    .post(url)
-    .body(body)
-    .send()
-    .await
-    .expect("Failed to create pull request");
-
-  println!("Github open pull request response:{:?}", response);
-
-  response
-    .json::<GithubCreatePullRequestResponse>()
-    .await
-    .expect("Failed to create pull request")
-    .number
-}
-
-pub async fn github_get_commits_in_pr(pr_number: i64) -> Vec<String> {
-  let repo_url = github_api_event_repo_url();
-  let client = fetch_github_api_client();
-  let mut commits = Vec::new();
-
-  let url = format!("{}/pulls/{}/commits", repo_url, pr_number);
-
-  let response = client
-    .get(url)
-    .send()
-    .await
-    .expect("Failed to get commits")
-    .json::<Vec<GithubGetCommitResponseItem>>()
-    .await
-    .expect("Failed into json by commit");
-
-  for commit in response {
-    commits.push(commit.sha);
-  }
-  commits
 }
