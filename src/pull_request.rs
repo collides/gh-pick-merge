@@ -8,14 +8,14 @@ use crate::GithubGetCommitResponseItem;
 
 const DEFAULT_GITHUB_PULL_REQUEST_TEMPLATE_PATH: &str = "./.github/pull_request_template.md";
 
-pub async fn github_open_pull_request(head: String, base: String, title: String) -> i64 {
+pub async fn github_open_pull_request(head: String, base: String, title: String, comment: String) -> i64 {
   let repo_url = github_api_event_repo_url();
 
-  let template_content = get_pull_request_body();
+  let template_content_json_string = get_pull_request_body();
 
-  let body = format!(
-    r#"{{"head":"{}","base":"{}","title":"{}","body":"{}"}}"#,
-    head, base, title, template_content
+  let body = format!( 
+    r#"{{"head":"{}","base":"{}","title":"{}","body":{}}}"#,
+    head, base, title, template_content_json_string
   );
 
   let url = format!("{}/pulls", repo_url);
@@ -27,7 +27,7 @@ pub async fn github_open_pull_request(head: String, base: String, title: String)
     .expect("Failed to parse create pull response")
     .number;
 
-  github_pull_request_push_comment(pr_number, format!("Auto pick merge by #{}", pr_number)).await;
+  github_pull_request_push_comment(pr_number, comment).await;
 
   pr_number
 }

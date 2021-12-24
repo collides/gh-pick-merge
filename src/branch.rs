@@ -11,8 +11,10 @@ pub async fn pick_pr_to_dest_branch(pr_number: i64, dest_branch: String) {
   
   let pr_title = format!("fix: auto pick #{} to {}", pr_number, dest_branch);
 
+  let comment = format!("Auto pick merge by #{}", pr_number);
+
   let pull_request_id =
-    github_open_pull_request(create_branch_result.new_branch_name, dest_branch, pr_title).await;
+    github_open_pull_request(create_branch_result.new_branch_name, dest_branch, pr_title, comment).await;
   
   if create_branch_result.not_matched_hash.len() > 0 {
     github_pull_request_push_comment(
