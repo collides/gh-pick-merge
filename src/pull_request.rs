@@ -8,12 +8,20 @@ use crate::GithubGetCommitResponseItem;
 
 const DEFAULT_GITHUB_PULL_REQUEST_TEMPLATE_PATH: &str = "./.github/pull_request_template.md";
 
-pub async fn github_open_pull_request(head: String, base: String, title: String, comment: String) -> i64 {
+pub async fn github_open_pull_request(
+  head: String,
+  base: String,
+  title: String,
+  comment: String,
+) -> i64 {
   let repo_url = github_api_event_repo_url();
 
-  let template_content_json_string = get_pull_request_body();
+  let template_content = get_pull_request_body();
 
-  let body = format!( 
+  let template_content_json_string = serde_json::to_string(&template_content)
+    .expect("get pull request body convert json to string error");
+
+  let body = format!(
     r#"{{"head":"{}","base":"{}","title":"{}","body":{}}}"#,
     head, base, title, template_content_json_string
   );
@@ -82,12 +90,15 @@ fn get_pull_request_body() -> String {
   let pull_request_template_content = fs::read_to_string(DEFAULT_GITHUB_PULL_REQUEST_TEMPLATE_PATH);
 
   match pull_request_template_content {
-    Ok(content) => {
-      serde_json::to_string(&content).expect("get pull request body convert json to string error")
-    }
+    Ok(content) => content,
     Err(error) => {
       println!("Read pull request template content error: {}", error);
       String::from("")
     }
   }
+}
+
+#[test]
+fn test_get_pull_request_body() {
+  assert_eq!(get_pull_request_body(), "");
 }
