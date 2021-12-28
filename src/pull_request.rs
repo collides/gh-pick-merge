@@ -6,7 +6,9 @@ use crate::helpers::github_api_event_repo_url;
 use crate::GithubCreatePullRequestResponse;
 use crate::GithubGetCommitResponseItem;
 
-const DEFAULT_GITHUB_PULL_REQUEST_TEMPLATE_PATH: &str = "./.github/pull_request_template.md";
+const DEFAULT_GITHUB_PULL_REQUEST_TEMPLATE_PATH: &str = "./.github/";
+
+const DEFAULT_GITHUB_PULL_REQUEST_TEMPLATE_FILE_NAME: &str = "pull_request_template";
 
 pub async fn github_open_pull_request(
   head: String,
@@ -87,15 +89,42 @@ pub async fn github_get_commits_in_pr(pr_number: i64) -> Vec<String> {
 }
 
 fn get_pull_request_body() -> String {
-  let pull_request_template_content = fs::read_to_string(DEFAULT_GITHUB_PULL_REQUEST_TEMPLATE_PATH);
+  let lower_case_pull_request_template_content = fs::read_to_string(format!(
+    "{}{}.md",
+    DEFAULT_GITHUB_PULL_REQUEST_TEMPLATE_PATH, DEFAULT_GITHUB_PULL_REQUEST_TEMPLATE_FILE_NAME
+  ));
 
-  match pull_request_template_content {
-    Ok(content) => content,
+  let match_lower_case_path_template = match lower_case_pull_request_template_content {
+    Ok(template) => template,
     Err(error) => {
       println!("Read pull request template content error: {}", error);
       String::from("")
     }
+  };
+
+  if !match_lower_case_path_template.is_empty() {
+    return match_lower_case_path_template;
   }
+
+  let upper_case_pull_request_template_content = fs::read_to_string(format!(
+    "{}{}.md",
+    DEFAULT_GITHUB_PULL_REQUEST_TEMPLATE_PATH,
+    DEFAULT_GITHUB_PULL_REQUEST_TEMPLATE_FILE_NAME.to_uppercase()
+  ));
+
+  let match_upper_case_path_template = match upper_case_pull_request_template_content {
+    Ok(template) => template,
+    Err(error) => {
+      println!("Read pull request template content error: {}", error);
+      String::from("")
+    }
+  };
+
+  if !match_upper_case_path_template.is_empty() {
+    return match_upper_case_path_template;
+  }
+
+  return String::from("");
 }
 
 #[test]
