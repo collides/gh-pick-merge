@@ -14,7 +14,6 @@ use types::*;
 #[tokio::main]
 async fn main() {
   let github_event = get_event_action().await;
-
   let matched_labels = match_pick_merge_labels(github_event.pull_request.labels);
 
   if matched_labels.len() <= 0 {
@@ -28,6 +27,11 @@ async fn main() {
 
     let dest_branch = label.split("/").last().expect("Not match dest branch");
 
-    pick_pr_to_dest_branch(github_event.number, dest_branch.to_string()).await;
+    pick_pr_to_dest_branch(
+      github_event.number,
+      &github_event.pull_request.title,
+      dest_branch.to_string(),
+    )
+    .await;
   }
 }

@@ -22,6 +22,7 @@ pub struct GithubActionPullRequestLabel {
 #[derive(Serialize, Deserialize, Debug)]
 pub struct GithubActionPullRequest {
   pub number: i64,
+  pub title: String,
   pub base: GithubActionPullRequestBranch,
   pub labels: Vec<GithubActionPullRequestLabel>,
 }

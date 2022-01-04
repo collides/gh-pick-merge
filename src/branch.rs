@@ -4,18 +4,19 @@ use crate::pull_request::github_open_pull_request;
 use crate::pull_request::github_pull_request_push_comment;
 use crate::types::*;
 
-pub async fn pick_pr_to_dest_branch(pr_number: i64, dest_branch: String) {
+pub async fn pick_pr_to_dest_branch(pr_number: i64, pr_title: &String, dest_branch: String) {
   println!("Start job pick to: {}", dest_branch);
 
   let create_branch_result = create_new_branch_by_commits(dest_branch.clone(), pr_number).await;
-  
-  let pr_title = format!("fix: auto pick #{} to {}", pr_number, dest_branch);
-
   let comment = format!("Auto pick merge by #{}", pr_number);
 
-  let pull_request_id =
-    github_open_pull_request(create_branch_result.new_branch_name, dest_branch, pr_title, comment).await;
-  
+  let pull_request_id = github_open_pull_request(
+    create_branch_result.new_branch_name,
+    dest_branch,
+    pr_title.to_string(),
+    comment,
+  )
+  .await;
   if create_branch_result.not_matched_hash.len() > 0 {
     github_pull_request_push_comment(
       pull_request_id,
