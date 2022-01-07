@@ -30,6 +30,8 @@ pub async fn github_open_pull_request(
 
   let url = format!("{}/pulls", repo_url);
 
+  println!("Open pull request body: {}", body);
+
   let pr_number = post_github_api(url, body)
     .await
     .json::<GithubCreatePullRequestResponse>()
