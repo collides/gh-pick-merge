@@ -27,6 +27,8 @@ async fn main() {
 
     let dest_branch = label.split("/").last().expect("Not match dest branch");
 
+    fetch_origin_branch(dest_branch);
+
     pick_pr_to_dest_branch(
       github_event.number,
       &github_event.pull_request.title,
