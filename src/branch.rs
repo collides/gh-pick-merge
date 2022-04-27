@@ -17,6 +17,7 @@ pub async fn pick_pr_to_dest_branch(pr_number: i64, pr_title: &String, dest_bran
     comment,
   )
   .await;
+  
   if create_branch_result.not_matched_hash.len() > 0 {
     github_pull_request_push_comment(
       pull_request_id,
@@ -81,12 +82,4 @@ async fn pick_commits(pr_number: i64) -> Vec<String> {
   }
 
   not_matched_hash
-}
-
-pub fn fetch_origin_branch(branch: &str) {
-  let option = git(["fetch", "origin", branch].to_vec());
-
-  if option.is_none() {
-    panic!("Fetch origin branch failed");
-  }
 }
