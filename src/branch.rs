@@ -11,18 +11,14 @@ pub async fn get_matched_milestone_id(dest_branch: String) -> Option<i64> {
   let milestones = github_milestones().await;
   let regex = Regex::new(r"(\d+.\d+)").unwrap();
 
-  let version = regex.find(dest_branch.as_str());
+  let version = regex.find(dest_branch.as_str()).expect("not matched version by dest branch").as_str();
 
-  match version {
-    Some(value) => {
-      for milestone in milestones {
-        let title = milestone.title.as_str();
-        if title == value.as_str() {
-          return Some(milestone.id);
-        }
-      }
+  for milestone in milestones {
+    let milestone_version = regex.find(milestone.title.as_str()).expect("not matched version by milestone").as_str();
+
+    if milestone_version == version {
+      return Some(milestone.id);
     }
-    None => println!("not matched version branch"),
   }
 
   None
