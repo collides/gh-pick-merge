@@ -5,6 +5,8 @@ use crate::helpers::fetch_github_api_client;
 use crate::helpers::github_api_event_repo_url;
 use crate::GithubCreatePullRequestResponse;
 use crate::GithubGetCommitResponseItem;
+use crate::GithubGetMilestoneResponseItem;
+// use crate::GithubGetLabelResponseItem;
 
 const DEFAULT_GITHUB_PULL_REQUEST_TEMPLATE_PATH: &str = "./.github/";
 
@@ -44,6 +46,30 @@ pub async fn github_open_pull_request(
   pr_number
 }
 
+pub async fn github_update_issue(pr_number: i64,milestone_id: i64) {
+  let client = fetch_github_api_client();
+  let repo_url = github_api_event_repo_url();
+
+  let body = format!(r#"{{"milestone":"{}"}}"#, milestone_id);
+
+  let url = format!("{}/issues/{}", repo_url, pr_number);
+
+  let response = client
+    .patch(url)
+    .body(body)
+    .send()
+    .await
+    .expect("Failed to update issue");
+
+  println!(
+    "update issue: {}",
+    response
+      .text()
+      .await
+      .expect("Failed to update issue")
+  );
+}
+
 pub async fn github_pull_request_push_comment(pr_number: i64, comment: String) {
   let client = fetch_github_api_client();
   let repo_url = github_api_event_repo_url();
@@ -66,6 +92,42 @@ pub async fn github_pull_request_push_comment(pr_number: i64, comment: String) {
       .await
       .expect("Failed to create pull comment")
   );
+}
+
+// pub async fn github_labels() -> Vec<GithubGetLabelResponseItem> {
+//   let client = fetch_github_api_client();
+//   let repo_url = github_api_event_repo_url();
+
+//   let url = format!("{}/labels", repo_url);
+
+//   let response = client
+//   .get(url)
+//   .send()
+//   .await
+//   .expect("Failed to get milestones")
+//   .json::<Vec<GithubGetLabelResponseItem>>()
+//   .await
+//   .expect("Failed into json by commit");
+
+//   response
+// }
+
+pub async fn github_milestones() -> Vec<GithubGetMilestoneResponseItem> {
+  let client = fetch_github_api_client();
+  let repo_url = github_api_event_repo_url();
+
+  let url = format!("{}/milestones", repo_url);
+
+  let response = client
+  .get(url)
+  .send()
+  .await
+  .expect("Failed to get milestones")
+  .json::<Vec<GithubGetMilestoneResponseItem>>()
+  .await
+  .expect("Failed into json by commit");
+
+  response
 }
 
 pub async fn github_get_commits_in_pr(pr_number: i64) -> Vec<String> {

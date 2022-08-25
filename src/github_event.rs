@@ -24,6 +24,7 @@ pub struct GithubActionPullRequest {
   pub number: i64,
   pub title: String,
   pub base: GithubActionPullRequestBranch,
+  pub head: GithubActionPullRequestBranch,
   pub labels: Vec<GithubActionPullRequestLabel>,
 }
 
@@ -42,6 +43,19 @@ pub struct GithubGetCommitResponseItem {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
+pub struct GithubGetMilestoneResponseItem {
+  pub id: i64,
+  pub title: String,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct GithubGetLabelResponseItem {
+  pub id: i64,
+  pub title: String,
+}
+
+
+#[derive(Serialize, Deserialize, Debug)]
 pub struct GithubCreatePullRequestResponse {
   pub number: i64,
 }
@@ -56,6 +70,7 @@ pub async fn get_event_action() -> GithubEventAction {
   get_event_action_by_gh_action()
 }
 
+// https://docs.github.com/en/developers/webhooks-and-events/events/github-event-types#pullrequestevent
 pub fn get_event_action_by_gh_action() -> GithubEventAction {
   let github_event_path = env::var_os("GITHUB_EVENT_PATH").unwrap();
   let github_event_string = fs::read_to_string(github_event_path)

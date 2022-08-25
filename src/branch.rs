@@ -1,8 +1,32 @@
 use crate::helpers::*;
 use crate::pull_request::github_get_commits_in_pr;
+use crate::pull_request::github_milestones;
 use crate::pull_request::github_open_pull_request;
 use crate::pull_request::github_pull_request_push_comment;
+use crate::pull_request::github_update_issue;
 use crate::types::*;
+use regex::Regex;
+
+pub async fn get_matched_milestone_id(dest_branch: String) -> Option<i64> {
+  let milestones = github_milestones().await;
+  let regex = Regex::new(r"(\d+.\d+)").unwrap();
+
+  let version = regex.find(dest_branch.as_str());
+
+  match version {
+    Some(value) => {
+      for milestone in milestones {
+        let title = milestone.title.as_str();
+        if title == value.as_str() {
+          return Some(milestone.id);
+        }
+      }
+    }
+    None => println!("not matched version branch"),
+  }
+
+  None
+}
 
 pub async fn pick_pr_to_dest_branch(pr_number: i64, pr_title: &String, dest_branch: String) {
   println!("Start job pick to: {}", dest_branch);
@@ -12,17 +36,29 @@ pub async fn pick_pr_to_dest_branch(pr_number: i64, pr_title: &String, dest_bran
 
   let pull_request_id = github_open_pull_request(
     create_branch_result.new_branch_name,
-    dest_branch,
+    dest_branch.clone(),
     pr_title.to_string(),
     comment,
   )
   .await;
+
   if create_branch_result.not_matched_hash.len() > 0 {
     github_pull_request_push_comment(
       pull_request_id,
       generate_pull_request_comment(create_branch_result.not_matched_hash),
     )
     .await;
+  }
+
+  let milestone_id = get_matched_milestone_id(dest_branch).await;
+
+  match milestone_id {
+    Some(milestone_id) => {
+      github_update_issue(pr_number, milestone_id).await;
+    }
+    None => {
+      println!("not matched milestone id");
+    }
   }
 
   println!("End job");
@@ -81,12 +117,4 @@ async fn pick_commits(pr_number: i64) -> Vec<String> {
   }
 
   not_matched_hash
-}
-
-pub fn fetch_origin_branch(branch: &str) {
-  let option = git(["fetch", "origin", branch].to_vec());
-
-  if option.is_none() {
-    panic!("Fetch origin branch failed");
-  }
 }
